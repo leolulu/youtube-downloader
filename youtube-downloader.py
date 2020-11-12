@@ -9,9 +9,15 @@ from time import sleep
 class YoutubeDownload:
     def __init__(self, target_folder_path):
         self.download_command_template = 'youtube-dl -i --proxy socks5://127.0.0.1:10808 #ecode-video-placeholder# -o "{temp_folder}/%(title)s.%(ext)s" "{url}"'
-        self.downloader = ThreadPoolExecutor(max_workers=2)
+        self.downloader = ThreadPoolExecutor(max_workers=4)
         self.target_folder_path = target_folder_path
         self.recode_video_sign = False
+        self.serialno = 0
+
+    def colored_print(self, content, id):
+        palette = {0: 31, 1: 35, 2: 33, 3: 36}
+        template = "\033[0;{fore_color};40m{content}\033[0m"
+        print(template.format(fore_color=palette[id % 4], content=content))
 
     def the_guide(self):
         self.prompt = '（当前Mp4转换状态：{recode_video_status}）（输入"mp4"切换状态）输入指令或Url：'
@@ -21,23 +27,25 @@ class YoutubeDownload:
         else:
             self.download_command = self.download_command_template.replace('#ecode-video-placeholder#', '')
 
-    def download_process(self, download_command):
-        p = subprocess.Popen(download_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,universal_newlines=True)
+    def download_process(self, download_command, id):
+        p = subprocess.Popen(download_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
         for line in iter(p.stdout.readline, ''):
             line = line.strip()
-            print(line)
+            self.colored_print(line, id)
             if line.find('ERROR') != -1:
                 return False
         return True
 
     def download_dispatcher(self, url):
+        self.serialno += 1
+        id = self.serialno
         print('开始下载：', url)
         temp_folder = str(time.time()).replace('.', '')
         download_command = self.download_command.format(temp_folder=temp_folder, url=url)
         print('下载指令：', download_command)
         retry_times, success_sign = 5, False
         while retry_times >= 0:
-            if self.download_process(download_command):
+            if self.download_process(download_command, id):
                 success_sign = True
                 break
             else:
