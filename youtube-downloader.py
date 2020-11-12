@@ -21,12 +21,7 @@ class YoutubeDownload:
             self.download_command = self.download_command_template.replace('#ecode-video-placeholder#', '')
 
     def download_process(self, download_command):
-        p = subprocess.Popen(download_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=0)
-        for line in iter(p.stdout.readline, b''):
-            line = line.decode().strip()
-            print(line)
-            if line.find('unable to extract') != -1:
-                return False
+        subprocess.call(download_command, shell=True)
         return True
 
     def download_dispatcher(self, url):
