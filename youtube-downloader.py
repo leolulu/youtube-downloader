@@ -11,7 +11,7 @@ class YoutubeDownload:
         self.download_command_template = 'youtube-dl -i --proxy socks5://127.0.0.1:10808 #ecode-video-placeholder# -o "{temp_folder}/%(title)s.%(ext)s" "{url}"'
         self.downloader = ThreadPoolExecutor(max_workers=4)
         self.target_folder_path = target_folder_path
-        if not os.path.exists:
+        if not os.path.exists(target_folder_path):
             os.mkdir(target_folder_path)
         self.recode_video_sign = False
         self.serialno = 0
@@ -75,5 +75,6 @@ class YoutubeDownload:
 
 
 if __name__ == "__main__":
-    api = YoutubeDownload()
+    api = YoutubeDownload(r"D:\syncthing-windows-amd64-v1.11.1\LOCAL_STORAGE\youtube手机在线文件夹")
+    print("当前下载文件夹：",os.path.abspath(api.target_folder_path))
     api.run_local_loop()
