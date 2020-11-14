@@ -6,10 +6,12 @@ import shutil
 
 
 class YoutubeDownload:
-    def __init__(self, target_folder_path):
+    def __init__(self, target_folder_path='./DOWNLOADED'):
         self.download_command_template = 'youtube-dl -i --proxy socks5://127.0.0.1:10808 #ecode-video-placeholder# -o "{temp_folder}/%(title)s.%(ext)s" "{url}"'
         self.downloader = ThreadPoolExecutor(max_workers=2)
         self.target_folder_path = target_folder_path
+        if not os.path.exists:
+            os.mkdir(target_folder_path)
         self.recode_video_sign = False
 
     def the_guide(self):
@@ -57,5 +59,5 @@ class YoutubeDownload:
 
 
 if __name__ == "__main__":
-    api = YoutubeDownload(r'C:\Dpan\python-script\youtube-downloader\DOWNLOADED')
+    api = YoutubeDownload()
     api.run_local_loop()
