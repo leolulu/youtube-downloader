@@ -4,10 +4,11 @@ from concurrent.futures import ThreadPoolExecutor
 import time
 import shutil
 from time import sleep
+import arrow
 
 
 class YoutubeDownload:
-    def __init__(self, target_folder_path='./DOWNLOADED'):
+    def __init__(self, target_folder_path='DOWNLOADED/'):
         self.download_command_template = 'youtube-dl -i --proxy socks5://127.0.0.1:10808 #ecode-video-placeholder# -o "{temp_folder}/%(title)s.%(ext)s" "{url}"'
         self.downloader = ThreadPoolExecutor(max_workers=4)
         self.target_folder_path = target_folder_path
@@ -15,6 +16,13 @@ class YoutubeDownload:
             os.mkdir(target_folder_path)
         self.recode_video_sign = False
         self.serialno = 0
+
+    def error_recorder_local_file(self, url, file_path='error.log'):
+        record = ''
+        record += f"{arrow.now().format('YYYYMMDD_HHmm')}：\n"
+        record += url + '\n'
+        with open(file_path, 'a', encoding='utf-8') as f:
+            f.write(record)
 
     def colored_print(self, content, id):
         palette = {0: 31, 1: 35, 2: 33, 3: 36}
@@ -61,6 +69,7 @@ class YoutubeDownload:
             self.colored_print('下载完成！' + url, id)
         else:
             self.colored_print('下载失败！' + url, id)
+            self.error_recorder_local_file(url)
 
     def run_local_loop(self):
         while True:
@@ -76,5 +85,5 @@ class YoutubeDownload:
 
 if __name__ == "__main__":
     api = YoutubeDownload(r"D:\syncthing-windows-amd64-v1.11.1\LOCAL_STORAGE\youtube手机在线文件夹")
-    print("当前下载文件夹：",os.path.abspath(api.target_folder_path))
+    print("当前下载文件夹：", os.path.abspath(api.target_folder_path))
     api.run_local_loop()
