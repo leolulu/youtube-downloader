@@ -5,6 +5,7 @@ import time
 import shutil
 from time import sleep
 import arrow
+import re
 
 
 class YoutubeDownload:
@@ -16,13 +17,28 @@ class YoutubeDownload:
             os.mkdir(target_folder_path)
         self.recode_video_sign = False
         self.serialno = 0
+        self.default_error_record_file_path = 'error.log'
 
-    def error_recorder_local_file(self, url, file_path='error.log'):
+    def error_recorder_local_file(self, url: str, additional_info: str=None, file_path=None):
+        if not file_path:
+            file_path = self.default_error_record_file_path
         record = ''
         record += f"{arrow.now().format('YYYYMMDD_HHmm')}：\n"
         record += url + '\n'
+        record += additional_info + '\n'
         with open(file_path, 'a', encoding='utf-8') as f:
             f.write(record)
+
+    def init_reload_default_failed_task(self):
+        if not os.path.exists(self.default_error_record_file_path):
+            return
+        with open(self.default_error_record_file_path, 'r', encoding='utf-8') as f:
+            failed_urls = f.read().split('\n')
+        failed_urls = [i for i in failed_urls if re.search(r"^http.*?youtube", i)]
+        for url in failed_urls:
+            print(f'重启上一次的失败任务：{url}')
+            self.downloader.submit(self.download_dispatcher, url)
+        os.remove(self.default_error_record_file_path)
 
     def colored_print(self, content, id):
         palette = {0: 31, 1: 35, 2: 33, 3: 36}
@@ -43,8 +59,8 @@ class YoutubeDownload:
             line = line.strip()
             self.colored_print(line, id)
             if line.find('ERROR') != -1:
-                return False
-        return True
+                return False, line
+        return True, None
 
     def download_dispatcher(self, url):
         self.serialno += 1
@@ -53,14 +69,15 @@ class YoutubeDownload:
         temp_folder = str(time.time()).replace('.', '')
         download_command = self.download_command.format(temp_folder=temp_folder, url=url)
         self.colored_print('下载指令：' + download_command, id)
-        retry_times, success_sign = 10, False
+        retry_times, success_sign = 30, False
         while retry_times >= 0:
-            if self.download_process(download_command, id):
+            if_success, info = self.download_process(download_command, id)
+            if if_success:
                 success_sign = True
                 break
             else:
                 retry_times -= 1
-                time.sleep(10)
+                time.sleep(20)
                 self.colored_print(f'重试，剩余{retry_times}次机会...', id)
         if success_sign:
             for file_ in os.listdir(temp_folder):
@@ -69,7 +86,7 @@ class YoutubeDownload:
             self.colored_print('下载完成！' + url, id)
         else:
             self.colored_print('下载失败！' + url, id)
-            self.error_recorder_local_file(url)
+            self.error_recorder_local_file(url, additional_info=info)
 
     def run_local_loop(self):
         while True:
@@ -86,4 +103,5 @@ class YoutubeDownload:
 if __name__ == "__main__":
     api = YoutubeDownload(r"E:\guest\youtube-dl\ONLINE\LITE")
     print("当前下载文件夹：", os.path.abspath(api.target_folder_path))
+    api.init_reload_default_failed_task()
     api.run_local_loop()
