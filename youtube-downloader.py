@@ -35,6 +35,7 @@ class YoutubeDownload:
         with open(self.default_error_record_file_path, 'r', encoding='utf-8') as f:
             failed_urls = f.read().split('\n')
         failed_urls = [i for i in failed_urls if re.search(r"^http.*?youtube", i)]
+        self._set_recode_video_switch()
         for url in failed_urls:
             print(f'重启上一次的失败任务：{url}')
             self.downloader.submit(self.download_dispatcher, url)
@@ -45,13 +46,17 @@ class YoutubeDownload:
         template = "\033[0;{fore_color};40m{content}\033[0m"
         print(template.format(fore_color=palette[id % 4], content=content))
 
-    def the_guide(self):
-        self.prompt = '(当前Mp4转换状态：{recode_video_status})(输入"mp4"切换状态) 输入指令或Url：'
-        self.prompt = self.prompt.format(recode_video_status=self.recode_video_sign)
+    def _set_recode_video_switch(self):
         if self.recode_video_sign:
             self.download_command = self.download_command_template.replace('#ecode-video-placeholder#', '--recode-video mp4')
         else:
             self.download_command = self.download_command_template.replace('#ecode-video-placeholder#', '')
+
+
+    def the_guide(self):
+        self.prompt = '(当前Mp4转换状态：{recode_video_status})(输入"mp4"切换状态) 输入指令或Url：'
+        self.prompt = self.prompt.format(recode_video_status=self.recode_video_sign)
+        self._set_recode_video_switch()
 
     def download_process(self, download_command, id):
         p = subprocess.Popen(download_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
