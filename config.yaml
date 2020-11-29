@@ -18,7 +18,7 @@ LITE:
   <<: *default
   target_folder_path: "E:\\guest\\youtube-dl\\ONLINE\\LITE"
 
-home-main':
+home-main:
   <<: *default
   recode_video_sign: true
   target_folder_path: "D:\\syncthing-windows-amd64-v1.11.1\\LOCAL_STORAGE\\youtube手机在线文件夹"
