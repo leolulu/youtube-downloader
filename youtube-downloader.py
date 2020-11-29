@@ -25,10 +25,13 @@ class YoutubeDownload:
         yaml = YAML(typ='safe')
         with open(config_path, 'r', encoding='utf-8') as f:
             conf = yaml.load(f)
-        if platform.node() in conf:
-            self.conf = conf.get(platform.node())
+        platform_node = platform.node()
+        if platform_node in conf:
+            self.conf = conf.get(platform_node)
+            print('使用配置：', platform_node)
         else:
             self.conf = conf.get('default')
+            print('使用配置：', 'default')
 
     def error_recorder_local_file(self, url: str, additional_info: str = None, file_path=None):
         if not file_path:
