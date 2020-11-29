@@ -75,6 +75,7 @@ class YoutubeDownload:
         p = subprocess.Popen(download_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
         for line in iter(p.stdout.readline, ''):
             line = line.strip()
+            line = f"[{arrow.now().format('YYYY-MM-DD HH:mm:ss')}] " + line
             self.colored_print(line, id)
             if line.find('ERROR') != -1:
                 return False, line
