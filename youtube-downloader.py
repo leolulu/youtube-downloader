@@ -3,23 +3,34 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 import time
 import shutil
-from time import sleep
 import arrow
 import re
+from ruamel.yaml import YAML
+import platform
 
 
 class YoutubeDownload:
-    def __init__(self, target_folder_path='DOWNLOADED/'):
+    def __init__(self):
+        self.load_config("config.yaml")
         self.download_command_template = 'youtube-dl -i --proxy socks5://127.0.0.1:10808 #ecode-video-placeholder# -o "{temp_folder}/%(title)s.%(ext)s" "{url}"'
         self.downloader = ThreadPoolExecutor(max_workers=4)
-        self.target_folder_path = target_folder_path
-        if not os.path.exists(target_folder_path):
-            os.mkdir(target_folder_path)
-        self.recode_video_sign = False
+        self.target_folder_path = self.conf['target_folder_path']
+        if not os.path.exists(self.target_folder_path):
+            os.mkdir(self.target_folder_path)
+        self.recode_video_sign = self.conf['recode_video_sign']
         self.serialno = 0
-        self.default_error_record_file_path = 'error.log'
+        self.default_error_record_file_path = self.conf['default_error_record_file_path']
 
-    def error_recorder_local_file(self, url: str, additional_info: str=None, file_path=None):
+    def load_config(self, config_path):
+        yaml = YAML(typ='safe')
+        with open(config_path, 'r', encoding='utf-8') as f:
+            conf = yaml.load(f)
+        if platform.node() in conf:
+            self.conf = conf.get(platform.node())
+        else:
+            self.conf = conf.get('default')
+
+    def error_recorder_local_file(self, url: str, additional_info: str = None, file_path=None):
         if not file_path:
             file_path = self.default_error_record_file_path
         record = ''
@@ -42,7 +53,7 @@ class YoutubeDownload:
         os.remove(self.default_error_record_file_path)
 
     def colored_print(self, content, id):
-        palette = {0: 31, 1: 35, 2: 33, 3: 36}
+        palette = self.conf['palette']
         template = "\033[0;{fore_color};40m{content}\033[0m"
         print(template.format(fore_color=palette[id % 4], content=content))
 
@@ -51,7 +62,6 @@ class YoutubeDownload:
             self.download_command = self.download_command_template.replace('#ecode-video-placeholder#', '--recode-video mp4')
         else:
             self.download_command = self.download_command_template.replace('#ecode-video-placeholder#', '')
-
 
     def the_guide(self):
         self.prompt = '(当前Mp4转换状态：{recode_video_status})(输入"mp4"切换状态) 输入指令或Url：'
@@ -74,7 +84,7 @@ class YoutubeDownload:
         temp_folder = str(time.time()).replace('.', '')
         download_command = self.download_command.format(temp_folder=temp_folder, url=url)
         self.colored_print('下载指令：' + download_command, id)
-        retry_times, success_sign = 30, False
+        retry_times, success_sign = self.conf['retry_times'], False
         while retry_times >= 0:
             if_success, info = self.download_process(download_command, id)
             if if_success:
@@ -82,7 +92,7 @@ class YoutubeDownload:
                 break
             else:
                 retry_times -= 1
-                time.sleep(20)
+                time.sleep(self.conf['retry_delay'])
                 self.colored_print(f'重试，剩余{retry_times}次机会...', id)
         if success_sign:
             for file_ in os.listdir(temp_folder):
@@ -106,7 +116,7 @@ class YoutubeDownload:
 
 
 if __name__ == "__main__":
-    api = YoutubeDownload(r"E:\guest\youtube-dl\ONLINE\LITE")
+    api = YoutubeDownload()
     print("当前下载文件夹：", os.path.abspath(api.target_folder_path))
     api.init_reload_default_failed_task()
     api.run_local_loop()

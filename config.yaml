@@ -1,0 +1,15 @@
+default: &default
+  target_folder_path: "DOWNLOADED/"
+  retry_times: 30
+  retry_delay: 20
+  palette:
+    0: 31
+    1: 35
+    2: 33
+    3: 36
+  recode_video_sign: false
+  default_error_record_file_path: "error.log"
+
+DESKTOP-2BQ4S97:
+  <<: *default
+  target_folder_path: "E:\\guest\\youtube-dl\\ONLINE\\LITE"
