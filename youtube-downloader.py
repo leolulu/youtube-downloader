@@ -82,6 +82,9 @@ class YoutubeDownload:
         return True, None
 
     def download_dispatcher(self, url):
+        if not re.match(r"http", url):
+            print(url, '不是有效的URL...')
+            return
         self.serialno += 1
         id = self.serialno
         self.colored_print('开始下载：' + url, id)
