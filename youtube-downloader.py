@@ -92,7 +92,7 @@ class YoutubeDownload:
         download_command = self.download_command.format(temp_folder=temp_folder, url=url)
         self.colored_print('下载指令：' + download_command, id)
         retry_times, success_sign = self.conf['retry_times'], False
-        while retry_times >= 0:
+        while retry_times > 0:
             if_success, info = self.download_process(download_command, id)
             if if_success:
                 success_sign = True
