@@ -7,6 +7,7 @@ import arrow
 import re
 from ruamel.yaml import YAML
 import platform
+import sys
 
 
 class YoutubeDownload:
@@ -118,6 +119,9 @@ class YoutubeDownload:
                 continue
             if input_value == 'mp4':
                 self.recode_video_sign = not self.recode_video_sign
+            elif input_value == 'exit':
+                if input("确认退出？[y/n]").strip() == 'y':
+                    sys.exit(0)
             else:
                 self.downloader.submit(self.download_dispatcher, input_value)
 
